@@ -8,14 +8,14 @@ let debutEssai;
 let pret = false;
 let resultats = [];
 
-// 🧠 1. demander l'identifiant participant
+// demander l'identifiant participant
 const participant = prompt("Entrez votre identifiant anonymisé (ex: P001)");
 
 startBtn.addEventListener("click", lancerEssai);
 
 function lancerEssai(){
 
-    // 🧹 cacher le bouton dès le début du test
+    //cacher le bouton dès le début du test
     startBtn.style.display = "none";
 
     stimulus.style.backgroundColor = "white";
@@ -39,7 +39,7 @@ document.addEventListener("keydown", (event) => {
         essais++;
 
         resultats.push({
-            participant: participant,   // 🧠 ajouté
+            participant: participant,   //  ajouté
             essai: essais,
             rt: Math.round(rt)
         });

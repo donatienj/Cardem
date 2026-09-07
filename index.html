@@ -360,15 +360,9 @@
 
   <script>
     // ==========================================
-    // CONFIGURATION GITHUB
+    // ✏️ ZONE A MODIFIER : COLLER VOTRE URL GOOGLE APPS SCRIPT ICI
     // ==========================================
-    const GITHUB_CONFIG = {
-      owner: "VOTRE_NOM_D_UTILISATEUR",
-      repo: "VOTRE_DEPOT",
-      branch: "main",
-      token: "VOTRE_GITHUB_PAT_TOKEN",
-      folderPath: "results"
-    };
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwLS3LFC_AmGkeMQIyRu2ndqGZQMETqaIQv7eGofDYkY5EmZvHIgvUc_xlEt97Mlg/exec";
 
     const TOTAL_TRIALS = 100;
     const STARTING_MONEY = 2000;
@@ -457,7 +451,6 @@
       render(net);
       showFeedbackNet(net);
 
-      // Vérification de la fin des 100 tirages
       if (state.trial >= TOTAL_TRIALS) {
         finishTask();
       } else {
@@ -469,10 +462,9 @@
       state.started = false;
       setDecksEnabled(false);
       feedbackTitle.textContent = "Test terminé";
-      feedbackText.textContent = "Export automatique des données vers GitHub en cours...";
+      feedbackText.textContent = "Envoi automatique des résultats vers votre Google Sheet...";
       
-      // Déclenchement automatique de l'envoi
-      uploadWorkbookToGitHub();
+      sendResultsToGoogleSheet();
     }
 
     function render(lastNet = 0) {
@@ -509,122 +501,35 @@
     }
 
     // ==========================================
-    // EXPORT ET ENVOI AUTOMATIQUE VERS GITHUB API
+    // ENVOI SÉCURISÉ VERS GOOGLE SHEETS
     // ==========================================
-    async function uploadWorkbookToGitHub() {
-      const header = ["trial", "deck", "reward", "penalty", "net", "money_after", "reaction_time_ms"];
-      const rows = state.results.map((row) => [
-        row.trial,
-        DECK_CODES[row.deck],
-        row.reward,
-        row.penalty,
-        row.net,
-        row.moneyAfter,
-        Math.round(row.reactionTimeMs)
-      ]);
-
-      const workbookContent = buildWorkbookXml([
-        { name: "Trials", rows: [header, ...rows] },
-        { name: "Blocs", rows: buildBlockSummaryRows() }
-      ]);
-
-      const participantPart = state.participantId || "sans-numero";
-      const fileName = `igt_participant_${participantPart}_${new Date().toISOString().slice(0, 19).replaceAll(":", "-")}.xls`;
-      const filePath = GITHUB_CONFIG.folderPath ? `${GITHUB_CONFIG.folderPath}/${fileName}` : fileName;
-
-      const encoder = new TextEncoder();
-      const uint8Array = encoder.encode(workbookContent);
-      let binary = "";
-      uint8Array.forEach((byte) => { binary += String.fromCharCode(byte); });
-      const base64Content = btoa(binary);
-
-      const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`;
+    async function sendResultsToGoogleSheet() {
+      const payload = {
+        participantId: state.participantId || "sans-numero",
+        results: state.results.map(r => ({
+          trial: r.trial,
+          deck: DECK_CODES[r.deck],
+          reward: r.reward,
+          penalty: r.penalty,
+          net: r.net,
+          moneyAfter: r.moneyAfter,
+          rtMs: Math.round(r.reactionTimeMs)
+        }))
+      };
 
       try {
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${GITHUB_CONFIG.token}`,
-            "Content-Type": "application/json",
-            "Accept": "application/vnd.github.v3+json"
-          },
-          body: JSON.stringify({
-            message: `Résultats IGT Participant : ${participantPart}`,
-            content: base64Content,
-            branch: GITHUB_CONFIG.branch
-          })
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
-          feedbackText.textContent = "Données envoyées avec succès sur GitHub ! Merci de votre participation.";
-        } else {
-          const errorData = await response.json();
-          console.error("Erreur GitHub API :", errorData);
-          feedbackText.textContent = "Erreur lors de l'envoi automatique. Vérifiez la configuration du Token GitHub.";
-        }
+        feedbackText.textContent = "Données enregistrées avec succès dans votre Google Sheet ! Merci de votre participation.";
       } catch (err) {
-        console.error("Erreur réseau :", err);
-        feedbackText.textContent = "Erreur de connexion lors de l'envoi vers GitHub.";
+        console.error("Erreur d'envoi :", err);
+        feedbackText.textContent = "Erreur de connexion lors de l'enregistrement des données.";
       }
-    }
-
-    function buildBlockSummaryRows() {
-      const deckOrder = ["A", "B", "C", "D"];
-      const blockLabels = ["Block 1", "Block 2", "Block 3", "Block 4", "Block 5"];
-      const counts = { A: [0,0,0,0,0], B: [0,0,0,0,0], C: [0,0,0,0,0], D: [0,0,0,0,0] };
-
-      state.results.forEach((row) => {
-        const blockIndex = Math.floor((row.trial - 1) / 20);
-        counts[row.deck][blockIndex] += 1;
-      });
-
-      const rows = [["", ...blockLabels, "total"]];
-      deckOrder.forEach((deckName) => {
-        const blockCounts = counts[deckName];
-        const total = blockCounts.reduce((sum, value) => sum + value, 0);
-        rows.push([`${deckName}/${DECK_CODES[deckName]}`, ...blockCounts, total]);
-      });
-
-      const netBlocks = blockLabels.map((_, index) => (
-        counts.C[index] + counts.D[index] - counts.A[index] - counts.B[index]
-      ));
-      const netTotal = netBlocks.reduce((sum, value) => sum + value, 0);
-      rows.push(["Net Score", ...netBlocks, netTotal]);
-      return rows;
-    }
-
-    function buildWorkbookXml(sheets) {
-      const worksheets = sheets.map((sheet) => `
-        <Worksheet ss:Name="${escapeXml(sheet.name)}">
-          <Table>
-            ${sheet.rows.map((row) => `
-              <Row>${row.map((value) => buildCellXml(value)).join("")}</Row>
-            `).join("")}
-          </Table>
-        </Worksheet>
-      `).join("");
-
-      return `<?xml version="1.0"?>
-        <?mso-application progid="Excel.Sheet"?>
-        <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-          xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:x="urn:schemas-microsoft-com:office:excel"
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-          ${worksheets}
-        </Workbook>`;
-    }
-
-    function buildCellXml(value) {
-      const isNumber = typeof value === "number" && Number.isFinite(value);
-      return `<Cell><Data ss:Type="${isNumber ? "Number" : "String"}">${escapeXml(value)}</Data></Cell>`;
-    }
-
-    function escapeXml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll("\"", "&quot;");
     }
 
     function validateParticipantInput() {

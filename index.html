@@ -362,7 +362,7 @@
     // ==========================================
     // ✏️ ZONE A MODIFIER : COLLER VOTRE URL GOOGLE APPS SCRIPT ICI
     // ==========================================
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwLS3LFC_AmGkeMQIyRu2ndqGZQMETqaIQv7eGofDYkY5EmZvHIgvUc_xlEt97Mlg/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGCN6ZTYojqFSjOnR--_QsVsQhJZsv1tN5MxJ_M1xUfMoemXhNYNNyzOvXX610KpQ/exec";
 
     const TOTAL_TRIALS = 100;
     const STARTING_MONEY = 2000;
@@ -435,14 +435,16 @@
       state.deckCounts[deckName] += 1;
       state.money += net;
 
+  // Enregistrement avec les noms exacts de variables demandés
       state.results.push({
-        trial: state.trial,
-        deck: deckName,
-        reward,
-        penalty,
-        net,
-        moneyAfter: state.money,
-        reactionTimeMs: performance.now() - window.lastTrialStart
+        trialnum: state.trial,
+        resp: DECK_CODES[deckName], // 1 pour A, 2 pour B, 3 pour C, 4 pour D
+        reward: reward,
+        penalty: penalty,
+        net: net,
+        total: state.money,
+        abstime: getFormattedTime(), // Heure exacte de l'essai
+        rt: Math.round(performance.now() - window.lastTrialStart) // Temps de réaction en ms
       });
 
       feedbackTitle.textContent = "Résultat net";
@@ -458,6 +460,26 @@
       }
     }
 
+    async function sendResultsToGoogleSheet() {
+      const payload = {
+        participantId: state.participantId || "sans-numero",
+        results: state.results
+      };
+
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        feedbackText.textContent = "Données enregistrées avec succès ! Merci de votre participation.";
+      } catch (err) {
+        console.error("Erreur d'envoi :", err);
+        feedbackText.textContent = "Erreur de connexion lors de l'enregistrement des données.";
+      }
+    }
     function finishTask() {
       state.started = false;
       setDecksEnabled(false);

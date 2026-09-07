@@ -359,9 +359,6 @@
   </main>
 
   <script>
-    // ==========================================
-    // ✏️ ZONE A MODIFIER : COLLER VOTRE URL GOOGLE APPS SCRIPT ICI
-    // ==========================================
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGCN6ZTYojqFSjOnR--_QsVsQhJZsv1tN5MxJ_M1xUfMoemXhNYNNyzOvXX610KpQ/exec";
 
     const TOTAL_TRIALS = 100;
@@ -408,6 +405,11 @@
 
     render();
 
+    function getFormattedTime() {
+      const d = new Date();
+      return d.toTimeString().split(' ')[0] + '.' + String(d.getMilliseconds()).padStart(3, '0');
+    }
+
     function startTask() {
       if (!validateParticipantInput()) return;
 
@@ -435,16 +437,15 @@
       state.deckCounts[deckName] += 1;
       state.money += net;
 
-  // Enregistrement avec les noms exacts de variables demandés
       state.results.push({
         trialnum: state.trial,
-        resp: DECK_CODES[deckName], // 1 pour A, 2 pour B, 3 pour C, 4 pour D
+        resp: DECK_CODES[deckName],
         reward: reward,
         penalty: penalty,
         net: net,
         total: state.money,
-        abstime: getFormattedTime(), // Heure exacte de l'essai
-        rt: Math.round(performance.now() - window.lastTrialStart) // Temps de réaction en ms
+        abstime: getFormattedTime(),
+        rt: Math.round(performance.now() - window.lastTrialStart)
       });
 
       feedbackTitle.textContent = "Résultat net";
@@ -458,6 +459,15 @@
       } else {
         window.lastTrialStart = performance.now();
       }
+    }
+
+    function finishTask() {
+      state.started = false;
+      setDecksEnabled(false);
+      feedbackTitle.textContent = "Test terminé";
+      feedbackText.textContent = "Envoi automatique des résultats vers votre Google Sheet...";
+      
+      sendResultsToGoogleSheet();
     }
 
     async function sendResultsToGoogleSheet() {
@@ -479,14 +489,6 @@
         console.error("Erreur d'envoi :", err);
         feedbackText.textContent = "Erreur de connexion lors de l'enregistrement des données.";
       }
-    }
-    function finishTask() {
-      state.started = false;
-      setDecksEnabled(false);
-      feedbackTitle.textContent = "Test terminé";
-      feedbackText.textContent = "Envoi automatique des résultats vers votre Google Sheet...";
-      
-      sendResultsToGoogleSheet();
     }
 
     function render(lastNet = 0) {
@@ -520,38 +522,6 @@
     function setDecksEnabled(enabled) {
       deckButtons.forEach((button) => { button.disabled = !enabled; });
       if (enabled) window.lastTrialStart = performance.now();
-    }
-
-    // ==========================================
-    // ENVOI SÉCURISÉ VERS GOOGLE SHEETS
-    // ==========================================
-    async function sendResultsToGoogleSheet() {
-      const payload = {
-        participantId: state.participantId || "sans-numero",
-        results: state.results.map(r => ({
-          trial: r.trial,
-          deck: DECK_CODES[r.deck],
-          reward: r.reward,
-          penalty: r.penalty,
-          net: r.net,
-          moneyAfter: r.moneyAfter,
-          rtMs: Math.round(r.reactionTimeMs)
-        }))
-      };
-
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        feedbackText.textContent = "Données enregistrées avec succès dans votre Google Sheet ! Merci de votre participation.";
-      } catch (err) {
-        console.error("Erreur d'envoi :", err);
-        feedbackText.textContent = "Erreur de connexion lors de l'enregistrement des données.";
-      }
     }
 
     function validateParticipantInput() {

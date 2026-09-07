@@ -244,32 +244,14 @@
         0 8px 20px rgba(22, 32, 42, 0.24);
     }
 
-    .deck[data-deck="B"] {
-      background-color: #8a315f;
-    }
+    .deck[data-deck="B"] { background-color: #8a315f; }
+    .deck[data-deck="B"]::before, .deck[data-deck="B"] span { color: #8a315f; }
 
-    .deck[data-deck="B"]::before,
-    .deck[data-deck="B"] span {
-      color: #8a315f;
-    }
+    .deck[data-deck="C"] { background-color: #356d3b; }
+    .deck[data-deck="C"]::before, .deck[data-deck="C"] span { color: #356d3b; }
 
-    .deck[data-deck="C"] {
-      background-color: #356d3b;
-    }
-
-    .deck[data-deck="C"]::before,
-    .deck[data-deck="C"] span {
-      color: #356d3b;
-    }
-
-    .deck[data-deck="D"] {
-      background-color: #8b5a21;
-    }
-
-    .deck[data-deck="D"]::before,
-    .deck[data-deck="D"] span {
-      color: #8b5a21;
-    }
+    .deck[data-deck="D"] { background-color: #8b5a21; }
+    .deck[data-deck="D"]::before, .deck[data-deck="D"] span { color: #8b5a21; }
 
     .feedback {
       display: grid;
@@ -301,17 +283,9 @@
       place-items: center;
     }
 
-    .gain {
-      color: var(--good);
-    }
-
-    .loss {
-      color: var(--danger);
-    }
-
-    .neutral {
-      color: var(--muted);
-    }
+    .gain { color: var(--good); }
+    .loss { color: var(--danger); }
+    .neutral { color: var(--muted); }
 
     .feedback-number {
       font-size: clamp(58px, 12vw, 118px);
@@ -322,48 +296,29 @@
       transition: opacity 500ms ease;
     }
 
-    .feedback-number.is-hidden {
-      opacity: 0;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .feedback-number.is-hidden { opacity: 0; }
+    .hidden { display: none !important; }
 
     @media (max-width: 820px) {
-      .deck-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .status-grid {
-        grid-template-columns: 1fr;
-      }
+      .deck-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 520px) {
-      main {
-        width: min(100% - 20px, 1120px);
-        padding-top: 18px;
-      }
-
-      .deck-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .deck {
-        min-height: 170px;
-      }
+      main { width: min(100% - 20px, 1120px); padding-top: 18px; }
+      .deck-grid { grid-template-columns: 1fr; }
+      .deck { min-height: 170px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- MODALE POUR LA SAISIE DU NUMÉRO PARTICIPANT -->
+  <!-- MODALE PARTICIPANT -->
   <div id="participantModal" class="modal-overlay">
     <div class="modal-card">
       <h2>Identification</h2>
       <div class="participant-field">
-        <label for="participantInput">Numero participant (7 chiffres)</label>
+        <label for="participantInput">Numéro participant (7 chiffres)</label>
         <input id="participantInput" type="text" inputmode="numeric" maxlength="7" autocomplete="off" aria-describedby="participantError" aria-invalid="false" placeholder="Ex: 1234567">
         <div id="participantError" class="error-text" role="alert"></div>
       </div>
@@ -372,13 +327,13 @@
   </div>
 
   <main>
-    <section class="status-grid" aria-label="Statut de la tache">
+    <section class="status-grid" aria-label="Statut de la tâche">
       <div class="status">
         <div class="label">Capital</div>
         <div id="moneyValue" class="value">2000</div>
       </div>
       <div class="status">
-        <div class="label">Dernier resultat net</div>
+        <div class="label">Dernier résultat net</div>
         <div id="lastNetValue" class="value neutral">0</div>
       </div>
     </section>
@@ -405,15 +360,14 @@
 
   <script>
     // ==========================================
-    // CONFIGURATION DU DÉPÔT GITHUB
-    // Remplissez ces informations pour autoriser l'export direct vers GitHub
+    // CONFIGURATION GITHUB
     // ==========================================
     const GITHUB_CONFIG = {
-      owner: "VOTRE_NOM_D_UTILISATEUR",     // Ex: "mon-pseudo-github"
-      repo: "VOTRE_DEPOT",                   // Ex: "igt-test-repo"
-      branch: "main",                        // Branche cible
-      token: "VOTRE_GITHUB_PAT_TOKEN",       // Votre GitHub Personal Access Token
-      folderPath: "results"                  // Dossier où stocker le résultat (créé si inexistant)
+      owner: "VOTRE_NOM_D_UTILISATEUR",
+      repo: "VOTRE_DEPOT",
+      branch: "main",
+      token: "VOTRE_GITHUB_PAT_TOKEN",
+      folderPath: "results"
     };
 
     const TOTAL_TRIALS = 100;
@@ -421,22 +375,10 @@
     const DECK_CODES = { A: 1, B: 2, C: 3, D: 4 };
 
     const decks = {
-      A: {
-        reward: 100,
-        penalties: [0, 0, 150, 0, 300, 0, 200, 0, 250, 350]
-      },
-      B: {
-        reward: 100,
-        penalties: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1250]
-      },
-      C: {
-        reward: 50,
-        penalties: [0, 0, 50, 0, 50, 0, 50, 0, 50, 50]
-      },
-      D: {
-        reward: 50,
-        penalties: [0, 0, 0, 0, 0, 0, 0, 0, 0, 250]
-      }
+      A: { reward: 100, penalties: [0, 0, 150, 0, 300, 0, 200, 0, 250, 350] },
+      B: { reward: 100, penalties: [0, 0, 0, 0, 0, 0, 0, 0, 0, 1250] },
+      C: { reward: 50, penalties: [0, 0, 50, 0, 50, 0, 50, 0, 50, 50] },
+      D: { reward: 50, penalties: [0, 0, 0, 0, 0, 0, 0, 0, 0, 250] }
     };
 
     const state = {
@@ -462,11 +404,8 @@
 
     startBtn.addEventListener("click", startTask);
     participantInput.addEventListener("input", validateParticipantInput);
-
-    participantInput.addEventListener("keypress", function(e) {
-      if (e.key === "Enter") {
-        startTask();
-      }
+    participantInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") startTask();
     });
 
     deckButtons.forEach((button) => {
@@ -476,14 +415,10 @@
     render();
 
     function startTask() {
-      if (!validateParticipantInput()) {
-        return;
-      }
+      if (!validateParticipantInput()) return;
 
       state.started = true;
       state.participantId = participantInput.value.trim();
-      
-      // Masquer la fenêtre modale
       participantModal.classList.add("hidden");
 
       feedbackTitle.textContent = "Choix en cours";
@@ -494,9 +429,7 @@
     }
 
     function chooseDeck(deckName) {
-      if (!state.started || state.trial >= TOTAL_TRIALS) {
-        return;
-      }
+      if (!state.started || state.trial >= TOTAL_TRIALS) return;
 
       const deck = decks[deckName];
       const drawIndex = state.deckCounts[deckName] % deck.penalties.length;
@@ -518,26 +451,27 @@
         reactionTimeMs: performance.now() - window.lastTrialStart
       });
 
-      feedbackTitle.textContent = "Resultat net";
+      feedbackTitle.textContent = "Résultat net";
       feedbackText.textContent = "";
 
+      render(net);
+      showFeedbackNet(net);
+
+      // Vérification de la fin des 100 tirages
       if (state.trial >= TOTAL_TRIALS) {
         finishTask();
       } else {
         window.lastTrialStart = performance.now();
       }
-
-      render(net);
-      showFeedbackNet(net);
     }
 
     function finishTask() {
       state.started = false;
       setDecksEnabled(false);
       feedbackTitle.textContent = "Test terminé";
-      feedbackText.textContent = "Envoi des données vers GitHub en cours...";
+      feedbackText.textContent = "Export automatique des données vers GitHub en cours...";
       
-      // Exportation automatique vers GitHub
+      // Déclenchement automatique de l'envoi
       uploadWorkbookToGitHub();
     }
 
@@ -570,16 +504,12 @@
     }
 
     function setDecksEnabled(enabled) {
-      deckButtons.forEach((button) => {
-        button.disabled = !enabled;
-      });
-      if (enabled) {
-        window.lastTrialStart = performance.now();
-      }
+      deckButtons.forEach((button) => { button.disabled = !enabled; });
+      if (enabled) window.lastTrialStart = performance.now();
     }
 
     // ==========================================
-    // ENVOI DU FICHIER XML EXCEL VIA GITHUB API
+    // EXPORT ET ENVOI AUTOMATIQUE VERS GITHUB API
     // ==========================================
     async function uploadWorkbookToGitHub() {
       const header = ["trial", "deck", "reward", "penalty", "net", "money_after", "reaction_time_ms"];
@@ -602,13 +532,10 @@
       const fileName = `igt_participant_${participantPart}_${new Date().toISOString().slice(0, 19).replaceAll(":", "-")}.xls`;
       const filePath = GITHUB_CONFIG.folderPath ? `${GITHUB_CONFIG.folderPath}/${fileName}` : fileName;
 
-      // Encodage en Base64 UTF-8 requis par l'API GitHub
       const encoder = new TextEncoder();
       const uint8Array = encoder.encode(workbookContent);
       let binary = "";
-      uint8Array.forEach((byte) => {
-        binary += String.fromCharCode(byte);
-      });
+      uint8Array.forEach((byte) => { binary += String.fromCharCode(byte); });
       const base64Content = btoa(binary);
 
       const url = `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`;
@@ -629,11 +556,11 @@
         });
 
         if (response.ok) {
-          feedbackText.textContent = "Données envoyées avec succès ! Merci de votre participation.";
+          feedbackText.textContent = "Données envoyées avec succès sur GitHub ! Merci de votre participation.";
         } else {
           const errorData = await response.json();
           console.error("Erreur GitHub API :", errorData);
-          feedbackText.textContent = "Erreur lors de l'envoi des données sur GitHub. Vérifiez la console.";
+          feedbackText.textContent = "Erreur lors de l'envoi automatique. Vérifiez la configuration du Token GitHub.";
         }
       } catch (err) {
         console.error("Erreur réseau :", err);
@@ -644,12 +571,7 @@
     function buildBlockSummaryRows() {
       const deckOrder = ["A", "B", "C", "D"];
       const blockLabels = ["Block 1", "Block 2", "Block 3", "Block 4", "Block 5"];
-      const counts = {
-        A: [0, 0, 0, 0, 0],
-        B: [0, 0, 0, 0, 0],
-        C: [0, 0, 0, 0, 0],
-        D: [0, 0, 0, 0, 0]
-      };
+      const counts = { A: [0,0,0,0,0], B: [0,0,0,0,0], C: [0,0,0,0,0], D: [0,0,0,0,0] };
 
       state.results.forEach((row) => {
         const blockIndex = Math.floor((row.trial - 1) / 20);
@@ -660,8 +582,7 @@
       deckOrder.forEach((deckName) => {
         const blockCounts = counts[deckName];
         const total = blockCounts.reduce((sum, value) => sum + value, 0);
-        const code = DECK_CODES[deckName];
-        rows.push([`${deckName}/${code}`, ...blockCounts, total]);
+        rows.push([`${deckName}/${DECK_CODES[deckName]}`, ...blockCounts, total]);
       });
 
       const netBlocks = blockLabels.map((_, index) => (
@@ -695,8 +616,7 @@
 
     function buildCellXml(value) {
       const isNumber = typeof value === "number" && Number.isFinite(value);
-      const type = isNumber ? "Number" : "String";
-      return `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>`;
+      return `<Cell><Data ss:Type="${isNumber ? "Number" : "String"}">${escapeXml(value)}</Data></Cell>`;
     }
 
     function escapeXml(value) {
@@ -710,17 +630,15 @@
     function validateParticipantInput() {
       const value = participantInput.value.trim();
       if (!value) {
-        participantError.textContent = "Renseigne un numero de participant.";
+        participantError.textContent = "Renseigne un numéro de participant.";
         participantInput.setAttribute("aria-invalid", "true");
         return false;
       }
-
       if (!/^\d{7}$/.test(value)) {
-        participantError.textContent = "Le numero de participant doit contenir exactement 7 chiffres.";
+        participantError.textContent = "Le numéro de participant doit contenir exactement 7 chiffres.";
         participantInput.setAttribute("aria-invalid", "true");
         return false;
       }
-
       clearParticipantError();
       return true;
     }

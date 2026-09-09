@@ -493,6 +493,7 @@
 
     function render(lastNet = 0) {
       moneyValue.textContent = state.money.toString();
+      moneyValue.classList.toggle("loss", state.money < 0);
       lastNetValue.textContent = formatSigned(lastNet);
       lastNetValue.classList.toggle("gain", lastNet > 0);
       lastNetValue.classList.toggle("loss", lastNet < 0);
